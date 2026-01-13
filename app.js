@@ -17,7 +17,7 @@ async function send() {
   }
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbzX_nE73Frdc9YuQpXwQ-QVScHEtwP5S9HxRYXlBc_Kk5bbbmKHO5X6tEvsxAcjlKJd/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycbzm363SNX9qsRIhA0bUaNSjIO51gcxg2jxuNrEEtaJG5BsyNnHeNq5GZUnsTbqxpVIxIQ/exec", {
       method: "POST",
       body: formData
     });
