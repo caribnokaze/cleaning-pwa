@@ -1,29 +1,59 @@
 async function send() {
   const staff = document.getElementById("staff").value;
   const site  = document.getElementById("site").value;
-  const files = document.getElementById("photos").files;
+  const fileInput = document.getElementById("photos");
+  const files = fileInput.files;
 
   if (!files.length) {
     alert("写真を選択してください");
     return;
   }
 
-  const formData = new FormData();
-  formData.append("staff", staff);
-  formData.append("site", site);
-
-  for (const file of files) {
-    formData.append("files", file);
-  }
+  // ボタンを無効化（連打防止）
+  const btn = document.querySelector("button");
+  btn.disabled = true;
+  btn.innerText = "送信中...";
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbzm363SNX9qsRIhA0bUaNSjIO51gcxg2jxuNrEEtaJG5BsyNnHeNq5GZUnsTbqxpVIxIQ/exec", {
-      method: "POST",
-      body: formData
+    // すべてのファイルをBase64に変換
+    const filePromises = Array.from(files).map(file => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({
+          base64: reader.result,
+          name: file.name
+        });
+        reader.onerror = reject;
+        reader.readAsDataURL(file); // Base64として読み込み
+      });
     });
 
-    alert("送信完了しました");
+    const fileObjects = await Promise.all(filePromises);
+
+    const payload = {
+      staff: staff,
+      site: site,
+      files: fileObjects
+    };
+
+    const response = await fetch("https://script.google.com/macros/s/AKfycbxdseNyzHh1ISA3Wk_zv6Xy9FUOvSgWCRtgxZgMA3sLWHSFVb_bkd4cZwKwXD6AXSqCOg/exec", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.text();
+    if (result === "OK") {
+      alert("送信完了しました");
+      // フォームをリセット
+      fileInput.value = "";
+    } else {
+      alert("エラーが発生しました: " + result);
+    }
   } catch (e) {
+    console.error(e);
     alert("送信に失敗しました");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "送信";
   }
 }
