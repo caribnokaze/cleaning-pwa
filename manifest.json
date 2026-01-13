@@ -1,1 +1,7 @@
+{
+  "name": "清掃写真アップロード",
+  "short_name": "清掃報告",
+  "start_url": "./",
+  "display": "standalone"
+}
 
