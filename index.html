@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>清掃写真アップロード</title>
+
+  <link rel="manifest" href="manifest.json">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <h1>清掃報告</h1>
+
+  <input id="staff" placeholder="清掃員名"><br><br>
+  <input id="site" placeholder="現場名"><br><br>
+
+  <input type="file"
+         id="photos"
+         accept="image/*"
+         multiple
+         capture="environment"><br><br>
+
+  <button onclick="send()">送信</button>
+</body>
+</html>
