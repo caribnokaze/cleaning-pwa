@@ -19,8 +19,7 @@ async function send() {
   try {
     await fetch("https://script.google.com/macros/s/AKfycbzX_nE73Frdc9YuQpXwQ-QVScHEtwP5S9HxRYXlBc_Kk5bbbmKHO5X6tEvsxAcjlKJd/exec", {
       method: "POST",
-      body: formData,
-      mode: "no-cors"
+      body: formData
     });
 
     alert("送信完了しました");
