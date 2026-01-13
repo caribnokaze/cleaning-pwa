@@ -50,8 +50,8 @@ async function send() {
       alert("エラーが発生しました: " + result);
     }
   } catch (e) {
-    console.error(e);
-    alert("送信に失敗しました");
+    console.error("エラー詳細:", e); // これを足すと、ブラウザのコンソールに理由が出ます
+    alert("送信に失敗しました。詳細はコンソールを確認してください。");
   } finally {
     btn.disabled = false;
     btn.innerText = "送信";
