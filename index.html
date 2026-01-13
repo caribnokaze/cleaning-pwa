@@ -2,23 +2,35 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>清掃写真アップロード</title>
-
-  <link rel="manifest" href="manifest.json">
-  <script defer src="app.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>写真アップロード</title>
 </head>
 <body>
-  <h1>清掃報告</h1>
 
-  <input id="staff" placeholder="清掃員名"><br><br>
-  <input id="site" placeholder="現場名"><br><br>
+  <h2>写真アップロード</h2>
 
-  <input type="file"
-         id="photos"
-         accept="image/*"
-         multiple
-         ><br><br>
+  <div>
+    <label>
+      担当者名：
+      <input type="text" id="staff" placeholder="山田">
+    </label>
+  </div>
 
-  <button onclick="send()">送信</button>
+  <div>
+    <label>
+      現場名：
+      <input type="text" id="site" placeholder="〇〇ビル">
+    </label>
+  </div>
+
+  <div>
+    <input type="file" id="photos" multiple accept="image/*">
+  </div>
+
+  <div>
+    <button onclick="send()">送信</button>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
