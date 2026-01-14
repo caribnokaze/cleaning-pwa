@@ -3,10 +3,11 @@ async function send() {
   try {
     const staff = document.getElementById("staff").value;
     const site  = document.getElementById("site").value;
+    const reportDate = document.getElementById("reportDate").value;
     const files = document.getElementById("photos").files;
 
-    if (!staff || !site) {
-      alert("名前と現場名を入力してください");
+    if (!staff || !site　|| !reportDate) {
+      alert("日付、担当者名、現場名を入力してください");
       return;
     }
 
@@ -30,7 +31,7 @@ async function send() {
     await fetch("https://script.google.com/macros/s/AKfycbzgULvJ8wUnOwEQJxMUDp3Cb5M-qQ6NVobFPnQ7IN4b9l5B4goMGEEMETsGcUcmiIvkUg/exec", {
       method: "POST",
       mode: "no-cors", 
-      body: JSON.stringify({ staff, site, images })
+      body: JSON.stringify({ staff, site, reportDate, images })
     });
 
     alert("送信完了しました！\nスプレッドシートを確認してください。");
@@ -75,3 +76,14 @@ function compressToBase64(file, maxWidth, quality) {
     reader.onerror = (err) => reject(new Error("ファイル読み取り失敗"));
   });
 }
+
+// ページ読み込み時に実行
+window.addEventListener('load', () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = ("0" + (today.getMonth() + 1)).slice(-2);
+  const dd = ("0" + today.getDate()).slice(-2);
+  
+  // yyyy-mm-dd 形式にしてセット
+  document.getElementById('reportDate').value = `${yyyy}-${mm}-${dd}`;
+});
