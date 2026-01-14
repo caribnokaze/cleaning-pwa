@@ -28,7 +28,7 @@ async function send() {
     }
 
     // 送信
-    await fetch("https://script.google.com/macros/s/AKfycbxdseNyzHh1ISA3Wk_zv6Xy9FUOvSgWCRtgxZgMA3sLWHSFVb_bkd4cZwKwXD6AXSqCOg/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycbzgULvJ8wUnOwEQJxMUDp3Cb5M-qQ6NVobFPnQ7IN4b9l5B4goMGEEMETsGcUcmiIvkUg/exec", {
       method: "POST",
       // headers はあえて設定しない（GAS側で受け取る際は postData.contents で自動的に文字列として届くため）
       mode: "no-cors", // これを入れると、エラーで止まりにくくなります
