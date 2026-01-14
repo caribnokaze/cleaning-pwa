@@ -45,7 +45,6 @@ async function send() {
   }
 }
 
-// ★この関数が足りなかったためにエラーが出ていました
 function compressToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
