@@ -97,6 +97,32 @@
     button:active {
       background: #335599;
     }
+
+    .radio-group {
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #eee;
+    }
+    .radio-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .radio-item:last-child { margin-bottom: 0; }
+    /* ラジオボタン自体のサイズを大きくして押しやすく */
+    input[type="radio"] {
+      width: 24px;
+      height: 24px;
+      margin: 0 12px 0 0;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .radio-label {
+      font-size: 17px;
+      font-weight: normal;
+    }
   </style>
 </head>
 
@@ -198,8 +224,46 @@
 </div>
 
     <div class="form-group">
-      <label>写真：</label>
+      <label>完了写真：</label>
       <input type="file" id="photos" multiple accept="image/*">
+    </div>
+
+    <div class="form-group">
+      <label>清掃区分：</label>
+      <div class="radio-group">
+        <label class="radio-item">
+          <input type="radio" name="workType" value="full">
+          <span class="radio-label">定期清掃＋フィルター清掃</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workType" value="regular">
+          <span class="radio-label">定期清掃のみ</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workType" value="filter">
+          <span class="radio-label">フィルター清掃のみ</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="workTime">清掃時間：</label>
+      <select id="workTime">
+        <option value="" disabled selected>選択してください</option>
+        <option value="15">15分</option>
+        <option value="30">30分</option>
+        <option value="45">45分</option>
+        <option value="60">60分</option>
+        <option value="75">75分</option>
+        <option value="90">90分</option>
+        <option value="105">105分</option>
+        <option value="120">120分</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>定期清掃およびフィルター清掃写真：</label>
+      <input type="file" id="extraPhotos" multiple accept="image/*">
     </div>
 
     <button type="button" onclick="send()">送信</button>
