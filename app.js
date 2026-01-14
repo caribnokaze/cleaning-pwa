@@ -34,7 +34,7 @@ async function send() {
       body: JSON.stringify({ staff, site, reportDate, images })
     });
 
-    alert("送信完了しました！\nスプレッドシートを確認してください。");
+    alert("送信完了しました！\nお疲れ様でした！");
     location.reload(); 
 
   } catch (e) {
