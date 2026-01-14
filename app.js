@@ -28,7 +28,7 @@ async function send() {
     }
 
     // GASに送信
-    await fetch("https://script.google.com/macros/s/AKfycbzgULvJ8wUnOwEQJxMUDp3Cb5M-qQ6NVobFPnQ7IN4b9l5B4goMGEEMETsGcUcmiIvkUg/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycbyjqvcg2uOT-_jAPCcwQkt8nBgeEyvaiV-wWehARY3fapUK-ncd5MabALaBGVlzfUdf/exec", {
       method: "POST",
       mode: "no-cors", 
       body: JSON.stringify({ staff, site, reportDate, images })
