@@ -5,6 +5,13 @@ async function send() {
     const site  = document.getElementById("site").value;
     const reportDate = document.getElementById("reportDate").value;
     const files = document.getElementById("photos").files;
+    const datalist = document.getElementById("site-list");
+    const validOptions = Array.from(datalist.options).map(opt => opt.value);
+
+    if (!validOptions.includes(site)) {
+      alert("現場名はリストの中から選んでください。");
+      return;
+    }
 
     if (!staff || !site　|| !reportDate) {
       alert("日付、担当者名、現場名を入力してください");
