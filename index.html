@@ -16,52 +16,88 @@
       font-family: -apple-system, BlinkMacSystemFont,
                    "Segoe UI", Roboto, "Helvetica Neue", Arial;
       font-size: 18px;
+      background-color: #f5f5f5; 
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px; /* パソコンで見た時の最大幅 */
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 軽い影をつけて見やすく */
     }
 
     h2 {
       font-size: 22px;
-      margin-bottom: 12px;
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center; /* タイトルも中央に */
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: bold;
     }
 
     input, button {
       width: 100%;
       font-size: 18px;
       padding: 14px;
-      margin: 10px 0;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    /* ファイル選択ボタンのスタイル調整 */
+    input[type="file"] {
+      padding: 10px;
+      border: 1px dashed #aaa;
+      background: #fafafa;
     }
 
     button {
-      background: #1976d2;
+      background: #4477cc;
       color: #fff;
       border: none;
-      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    button:active {
+      background: #335599;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>写真アップロード</h2>
+  <div class="container">
+    <h2>写真アップロード</h2>
 
-  <div>
-    <label>
-      担当者名：
+    <div class="form-group">
+      <label for="staff">担当者名：</label>
       <input type="text" id="staff" placeholder="山田">
-    </label>
-  </div>
+    </div>
 
-  <div>
-    <label>
-      現場名：
+    <div class="form-group">
+      <label for="site">現場名：</label>
       <input type="text" id="site" placeholder="〇〇ビル">
-    </label>
-  </div>
+    </div>
 
-  <div>
-    <input type="file" id="photos" multiple accept="image/*">
-  </div>
+    <div class="form-group">
+      <label>写真：</label>
+      <input type="file" id="photos" multiple accept="image/*">
+    </div>
 
-  <div>
     <button type="button" onclick="send()">送信</button>
   </div>
 
