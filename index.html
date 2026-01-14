@@ -47,26 +47,38 @@
       font-weight: bold;
     }
 
+    /* 入力欄、セレクトボックス、ボタンの共通設定 */
     input, select, button {
-  width: 100%;
-  font-size: 18px;
-  padding: 14px;
-  margin: 8px 0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  /* iPhoneのデフォルトスタイルをリセット */
-  appearance: none;
-  -webkit-appearance: none;
-  background-color: #fff;
-}
+      width: 100%;             /* 横幅をコンテナいっぱいに広げる */
+      font-size: 18px;         /* 文字を大きくして読みやすく */
+      padding: 14px;           /* 内側の余白を増やして押しやすく */
+      margin: 8px 0;           /* 前後の間隔を調整 */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      
+      /* iPhone独自のスタイルをリセットし、こちらの指定を優先させる */
+      display: block;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;  /* パディングを含めたサイズ計算にする */
+    }
 
-/* プルダウンの矢印を表示させたい場合の設定 */
-select {
-  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 16px;
-}
+    /* セレクトボックス（現場名）専用の矢印装飾 */
+    select {
+      /* 右側に下向きの矢印を表示（これがないとプルダウンに見えないため） */
+      background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 18px;
+      padding-right: 40px;     /* 矢印と文字が重ならないように右側を空ける */
+      cursor: pointer;
+    }
+
+    /* 報告日（日付欄）の高さもセレクトボックスと合わせる */
+    input[type="date"] {
+      min-height: 54px;
+    }
 
     /* ファイル選択ボタンのスタイル調整 */
     input[type="file"] {
