@@ -12,7 +12,7 @@ async function send() {
     }
 
     if (!staff || !site　|| !reportDate) {
-      alert("日付、担当者名、現場名を入力してください");
+      alert("日付、担当者名を入力してください");
       return;
     }
 
