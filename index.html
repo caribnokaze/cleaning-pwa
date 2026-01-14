@@ -47,17 +47,26 @@
       font-weight: bold;
     }
 
-    input, button {
-      width: 100%;
-      font-size: 18px;
-      padding: 14px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      appearance: none;
-      -webkit-appearance: none;
-      display: block;
-    }
+    input, select, button {
+  width: 100%;
+  font-size: 18px;
+  padding: 14px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  /* iPhoneのデフォルトスタイルをリセット */
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+}
+
+/* プルダウンの矢印を表示させたい場合の設定 */
+select {
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
 
     /* ファイル選択ボタンのスタイル調整 */
     input[type="file"] {
