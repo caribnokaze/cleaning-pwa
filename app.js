@@ -4,7 +4,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (dateInput) dateInput.valueAsDate = new Date();
 });
 
-// 2. メインの送信関数（1枚ずつ順番に送信する安定モデル）
+// 2. メインの送信関数（2枚ずつ並列で送信する高速・安定モデル）
 async function send() {
   const btn = document.querySelector("button");
   try {
@@ -32,42 +32,53 @@ async function send() {
     btn.disabled = true;
     btn.innerText = "圧縮中...";
 
-    // --- A. 圧縮タスクの作成 ---
+    // --- A. 全ての画像を先に圧縮する ---
     const tasks = [];
-    // 通常写真
     for (let i = 0; i < files.length; i++) {
-      const base64 = await compressToBase64(files[i], 800, 0.4);
-      tasks.push({ name: `${site}_(${reportDate})_${staff}_${i + 1}`, data: base64, isExtra: false });
+      tasks.push(compressToBase64(files[i], 800, 0.4).then(data => ({
+        name: `${site}_(${reportDate})_${staff}_${i + 1}`,
+        data: data,
+        isExtra: false
+      })));
     }
-    // 追加写真
     for (let i = 0; i < extraFiles.length; i++) {
-      const base64 = await compressToBase64(extraFiles[i], 800, 0.4);
-      tasks.push({ name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`, data: base64, isExtra: true });
+      tasks.push(compressToBase64(extraFiles[i], 800, 0.4).then(data => ({
+        name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
+        data: data,
+        isExtra: true
+      })));
     }
 
-    // --- B. 1枚ずつ順番に送信 ---
-    const total = tasks.length;
-    for (let i = 0; i < total; i++) {
-      btn.innerText = `送信中 (${i + 1} / ${total}枚目)`;
-      
-      const payload = { 
-        staff, 
-        site, 
-        reportDate, 
-        workTypeLabel, 
-        workTime, 
-        singleImage: tasks[i] 
-      };
+    // すべての圧縮が完了するのを待つ
+    const allImages = await Promise.all(tasks);
 
-      const response = await fetch("https://script.google.com/macros/s/AKfycbyOWQGRpKNLCucENZ7Z6Ctnhh00BiMR6_1caPlQh_7HHDBHa5fldcgj7XKlFFK3un0gaA/exec", {
-        method: "POST",
-        body: JSON.stringify(payload)
+    // --- B. 2枚ずつ並列で送信する ---
+    const concurrency = 2; // ここを2に設定
+    const total = allImages.length;
+
+    for (let i = 0; i < total; i += concurrency) {
+      btn.innerText = `送信中 (${i + 1}〜${Math.min(i + concurrency, total)} / ${total}枚目)`;
+      
+      // 2枚分の送信処理をまとめる
+      const chunk = allImages.slice(i, i + concurrency);
+      const uploadPromises = chunk.map(async (img) => {
+        const payload = { 
+          staff, site, reportDate, workTypeLabel, workTime, 
+          singleImage: img 
+        };
+
+        const response = await fetch("https://script.google.com/macros/s/AKfycbyOWQGRpKNLCucENZ7Z6Ctnhh00BiMR6_1caPlQh_7HHDBHa5fldcgj7XKlFFK3un0gaA/exec", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.text();
+        if (!result.includes("OK")) throw new Error(`送信エラー: ${result}`);
+        return result;
       });
 
-      const result = await response.text();
-      if (!result.includes("OK")) {
-        throw new Error(`${i + 1}枚目の送信でエラー: ${result}`);
-      }
+      // 2枚の送信が両方終わるまで待機して次へ
+      await Promise.all(uploadPromises);
     }
 
     alert("すべての送信が完了しました！\nお疲れ様でした。");
