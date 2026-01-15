@@ -233,14 +233,13 @@
   </select>
 </div>
 
-    <div class="form-group">
-      <label>通常清掃写真：</label>
-      <input type="file" id="photos" multiple accept="image/*">
-    </div>
-
-    <div class="form-group">
+        <div class="form-group">
       <label>清掃区分：</label>
       <div class="radio-group">
+        <label class="radio-item">
+          <input type="radio" name="workType" value="full">
+          <span class="radio-label">通常清掃のみ</span>
+        </label>
         <label class="radio-item">
           <input type="radio" name="workType" value="full">
           <span class="radio-label">定期清掃＋フィルター清掃</span>
@@ -254,6 +253,11 @@
           <span class="radio-label">フィルター清掃のみ</span>
         </label>
       </div>
+    </div>
+
+    <div class="form-group">
+      <label>通常清掃写真：</label>
+      <input type="file" id="photos" multiple accept="image/*">
     </div>
 
     <div class="form-group">
