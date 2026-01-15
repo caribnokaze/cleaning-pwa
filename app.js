@@ -41,7 +41,7 @@ async function send() {
     }
     // 追加写真
     for (let i = 0; i < extraFiles.length; i++) {
-      const base64 = await compressToBase64(extraFiles[i], 1024, 0.5);
+      const base64 = await compressToBase64(extraFiles[i], 800, 0.4);
       tasks.push({ name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`, data: base64, isExtra: true });
     }
 
