@@ -117,3 +117,7 @@ function compressToBase64(file, maxWidth, quality) {
     reader.onerror = () => reject(new Error("ファイル読み取り失敗"));
   });
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById("reportDate").valueAsDate = new Date();
+});
