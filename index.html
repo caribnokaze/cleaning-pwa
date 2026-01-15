@@ -125,6 +125,14 @@
       font-size: 17px;
       font-weight: normal;
     }
+
+    .footer-logo {
+      display: block;           /* ブロック要素として扱う */
+      margin: 30px auto 0;      /* 上に30pxの余白、左右は自動で中央揃え、下は0 */
+      max-width: 150px;         /* 画像の最大幅を指定（大きすぎないように調整） */
+      width: 100%;              /* 親要素の幅に合わせて縮小 */
+      height: auto;             /* 縦横比を保持 */
+    }
   </style>
 </head>
 
@@ -269,6 +277,8 @@
     </div>
 
     <button type="button" onclick="send()">送信</button>
+
+    <img src="images/tocorologo.png" alt="TOCORO Clean Team ロゴ" class="footer-logo">
   </div>
 
   <script src="app.js"></script>
