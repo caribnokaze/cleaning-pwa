@@ -195,3 +195,60 @@ const checkFileCount = (e) => {
 
 document.getElementById('photos').addEventListener('change', checkFileCount);
 document.getElementById('extraPhotos').addEventListener('change', checkFileCount);
+
+/**
+ * 送信ボタンの有効/無効を切り替える判定関数
+ */
+function updateButtonState() {
+  const staff = document.getElementById("staff").value;
+  const site = document.getElementById("site").value;
+  const reportDate = document.getElementById("reportDate").value;
+  const files = document.getElementById("photos").files;
+  const workTypeEl = document.querySelector('input[name="workType"]:checked');
+  const workType = workTypeEl ? workTypeEl.value : "";
+  const workTime = document.getElementById("workTime").value;
+  const extraFiles = document.getElementById("extraPhotos").files;
+  const btn = document.getElementById("submitBtn");
+
+  // 基本の必須チェック：担当者、現場、日付、区分、通常写真（1枚以上）
+  let isValid = staff && site && reportDate && workType && files.length > 0;
+
+  // 区分ごとの追加チェック
+  if (workType === 'full') {
+    // 定期＋フィルター：時間と追加写真の両方が必須
+    if (!workTime || extraFiles.length === 0) isValid = false;
+  } else if (workType === 'regular') {
+    // 定期のみ：追加写真のみ必須（時間は不要）
+    if (extraFiles.length === 0) isValid = false;
+  } else if (workType === 'filter') {
+    // フィルターのみ：時間と追加写真の両方が必須
+    if (!workTime || extraFiles.length === 0) isValid = false;
+  }
+
+  // ボタンの有効・無効を切り替え
+  btn.disabled = !isValid;
+  
+  // 見た目でも分かりやすく（有効なら不透明、無効なら半透明）
+  btn.style.opacity = isValid ? "1.0" : "0.5";
+  btn.style.cursor = isValid ? "pointer" : "not-allowed";
+}
+
+/**
+ * 各入力項目に「入力されたらチェックする」イベントを設定
+ */
+// テキスト・日付・セレクト
+['staff', 'site', 'reportDate', 'workTime'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateButtonState);
+});
+
+// ラジオボタン（清掃区分）
+document.getElementsByName('workType').forEach(el => {
+  el.addEventListener('change', updateButtonState);
+});
+
+// ファイル選択（通常・追加）
+document.getElementById('photos').addEventListener('change', updateButtonState);
+document.getElementById('extraPhotos').addEventListener('change', updateButtonState);
+
+// ページ読み込み時にも一度実行して初期状態を反映
+window.addEventListener('DOMContentLoaded', updateButtonState);
