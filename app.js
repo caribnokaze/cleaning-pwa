@@ -36,7 +36,7 @@ async function send() {
     const tasks = [];
     // 通常写真
     for (let i = 0; i < files.length; i++) {
-      const base64 = await compressToBase64(files[i], 1024, 0.5);
+      const base64 = await compressToBase64(files[i], 800, 0.4);
       tasks.push({ name: `${site}_(${reportDate})_${staff}_${i + 1}`, data: base64, isExtra: false });
     }
     // 追加写真
