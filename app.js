@@ -38,7 +38,7 @@ async function send() {
     // 通常写真の圧縮予約
     for (let i = 0; i < files.length; i++) {
       compressionPromises.push(
-        compressToBase64(files[i], 800, 0.4).then(data => ({
+        compressToBase64(files[i], 500, 0.15).then(data => ({
           name: `${site}_(${reportDate})_${staff}_${i + 1}`,
           data: data,
           isExtra: false
@@ -49,7 +49,7 @@ async function send() {
     // 追加写真の圧縮予約
     for (let i = 0; i < extraFiles.length; i++) {
       compressionPromises.push(
-        compressToBase64(extraFiles[i], 800, 0.4).then(data => ({
+        compressToBase64(extraFiles[i], 500, 0.15).then(data => ({
           name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
           data: data,
           isExtra: true
