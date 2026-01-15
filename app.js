@@ -67,7 +67,7 @@ async function send() {
     };
 
     // GASにPOST送信
-    await fetch("https://script.google.com/macros/s/AKfycbz0luW1Xe9XwVON8MZBOLp5J-1N_J5olrKVVk_6dccOouHNLAWefq5bqDroVXkwPZ91/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycbyJcCLos3A4ynzANnfPiQW_A_HViOVDbtULXVqpt1vit847yyhVo7vdHYcIKZFA4y0/exec", {
       method: "POST",
       mode: "no-cors", 
       body: JSON.stringify(payload)
