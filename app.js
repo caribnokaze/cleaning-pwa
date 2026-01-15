@@ -155,3 +155,16 @@ document.addEventListener('change', (e) => {
     }
   }
 });
+
+// ファイル選択時の枚数制限（100枚）
+const checkFileCount = (e) => {
+  const maxFiles = 100;
+  if (e.target.files.length > maxFiles) {
+    alert(`一度に選択できるのは${maxFiles}枚までです。選択し直してください。`);
+    e.target.value = ""; // 選択をリセット
+  }
+};
+
+// 両方のファイル入力欄にイベントを設定
+document.getElementById('photos').addEventListener('change', checkFileCount);
+document.getElementById('extraPhotos').addEventListener('change', checkFileCount);
