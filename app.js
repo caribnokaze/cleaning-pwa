@@ -6,12 +6,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const dateInput = document.getElementById("reportDate");
   if (dateInput) dateInput.valueAsDate = new Date();
 
-  // 初期状態の設定（HTMLで通常清掃にcheckedが入っている前提）
+  // 初期状態で「通常清掃のみ」が選択されている場合の無効化処理を強制実行
   const workTimeSelect = document.getElementById('workTime');
   const extraPhotosInput = document.getElementById('extraPhotos');
+  const defaultWorkType = document.querySelector('input[name="workType"]:checked');
 
-  if (workTimeSelect && extraPhotosInput) {
-    // デフォルトは「通常清掃のみ」の状態にする
+  // 要素が存在し、かつ「通常清掃のみ(normal)」が選択されている場合
+  if (workTimeSelect && extraPhotosInput && defaultWorkType && defaultWorkType.value === 'normal') {
     workTimeSelect.disabled = true;
     extraPhotosInput.disabled = true;
     workTimeSelect.style.opacity = "0.5";
