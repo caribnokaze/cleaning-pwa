@@ -35,14 +35,14 @@ async function send() {
     // --- A. 全ての画像を先に圧縮する ---
     const tasks = [];
     for (let i = 0; i < files.length; i++) {
-      tasks.push(compressToBase64(files[i], 800, 0.4).then(data => ({
+      tasks.push(compressToBase64(files[i], 600, 0.4).then(data => ({
         name: `${site}_(${reportDate})_${staff}_${i + 1}`,
         data: data,
         isExtra: false
       })));
     }
     for (let i = 0; i < extraFiles.length; i++) {
-      tasks.push(compressToBase64(extraFiles[i], 800, 0.4).then(data => ({
+      tasks.push(compressToBase64(extraFiles[i], 600, 0.4).then(data => ({
         name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
         data: data,
         isExtra: true
