@@ -1,3 +1,10 @@
+// 1. ページ読み込み時に日付をセット
+window.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById("reportDate");
+  if (dateInput) dateInput.valueAsDate = new Date();
+});
+
+// 2. メインの送信関数（1枚ずつ順番に送信する安定モデル）
 async function send() {
   const btn = document.querySelector("button");
   try {
@@ -26,47 +33,41 @@ async function send() {
     btn.innerText = "圧縮中...";
 
     // --- A. 圧縮タスクの作成 ---
-    const compressTask = async (file, name, isExtra) => {
-      const base64 = await compressToBase64(file, 800, 0.5); // 800px & 画質0.5で高速化
-      return { name, data: base64, isExtra };
-    };
-
     const tasks = [];
-    // 通常写真の圧縮予約
+    // 通常写真
     for (let i = 0; i < files.length; i++) {
-      tasks.push(compressTask(files[i], `${site}_(${reportDate})_${staff}_${i + 1}`, false));
+      const base64 = await compressToBase64(files[i], 1024, 0.5);
+      tasks.push({ name: `${site}_(${reportDate})_${staff}_${i + 1}`, data: base64, isExtra: false });
     }
-    // 追加写真の圧縮予約
+    // 追加写真
     for (let i = 0; i < extraFiles.length; i++) {
-      tasks.push(compressTask(extraFiles[i], `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`, true));
+      const base64 = await compressToBase64(extraFiles[i], 1024, 0.5);
+      tasks.push({ name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`, data: base64, isExtra: true });
     }
 
-    // 全ての圧縮を一斉に実行（ここでスマホのCPUをフル活用）
-    const allImages = await Promise.all(tasks);
-
-    // --- B. 3枚ずつ並列で送信 (スロット制御) ---
-    const concurrency = 3; // 同時送信数
-    const total = allImages.length;
-
-    for (let i = 0; i < total; i += concurrency) {
-      btn.innerText = `送信中 (${i + 1}〜${Math.min(i + concurrency, total)} / ${total}枚)`;
+    // --- B. 1枚ずつ順番に送信 ---
+    const total = tasks.length;
+    for (let i = 0; i < total; i++) {
+      btn.innerText = `送信中 (${i + 1} / ${total}枚目)`;
       
-      // 3枚分を切り出して一斉に送信開始
-      const chunk = allImages.slice(i, i + concurrency);
-      
-      const uploadPromises = chunk.map(async (img) => {
-        const payload = { staff, site, reportDate, workTypeLabel, workTime, singleImage: img };
-        const res = await fetch("https://script.google.com/macros/s/AKfycbyOWQGRpKNLCucENZ7Z6Ctnhh00BiMR6_1caPlQh_7HHDBHa5fldcgj7XKlFFK3un0gaA/exec", {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-        const result = await res.text();
-        if (!result.includes("OK")) throw new Error(`送信失敗: ${result}`);
-        return result;
+      const payload = { 
+        staff, 
+        site, 
+        reportDate, 
+        workTypeLabel, 
+        workTime, 
+        singleImage: tasks[i] 
+      };
+
+      const response = await fetch("https://script.google.com/macros/s/AKfycbyOWQGRpKNLCucENZ7Z6Ctnhh00BiMR6_1caPlQh_7HHDBHa5fldcgj7XKlFFK3un0gaA/exec", {
+        method: "POST",
+        body: JSON.stringify(payload)
       });
 
-      // 3枚全ての完了を待ってから次の3枚へ
-      await Promise.all(uploadPromises);
+      const result = await response.text();
+      if (!result.includes("OK")) {
+        throw new Error(`${i + 1}枚目の送信でエラー: ${result}`);
+      }
     }
 
     alert("すべての送信が完了しました！\nお疲れ様でした。");
@@ -81,7 +82,7 @@ async function send() {
   }
 }
 
-// 3. 画像圧縮関数（変更なし）
+// 3. 画像圧縮関数
 function compressToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -103,8 +104,6 @@ function compressToBase64(file, maxWidth, quality) {
         ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL("image/jpeg", quality));
       };
-      img.onerror = () => reject(new Error("画像の読み込み失敗"));
     };
-    reader.onerror = () => reject(new Error("ファイル読み取り失敗"));
   });
 }
