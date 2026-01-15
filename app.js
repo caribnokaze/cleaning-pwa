@@ -134,25 +134,42 @@ document.addEventListener('change', (e) => {
     const workTimeSelect = document.getElementById('workTime');
     const extraPhotosInput = document.getElementById('extraPhotos');
 
+    // 清掃区分によって入力可否を切り替える設定
+document.addEventListener('change', (e) => {
+  if (e.target.name === 'workType') {
+    const workType = e.target.value;
+    const workTimeSelect = document.getElementById('workTime');
+    const extraPhotosInput = document.getElementById('extraPhotos');
+
     if (workType === 'normal') {
-      // 「通常清掃のみ」の場合は無効化し、値をリセット
+      // 1. 通常清掃のみ：時間も写真も「無効」
       workTimeSelect.disabled = true;
-      workTimeSelect.value = ""; 
+      workTimeSelect.value = "";
       extraPhotosInput.disabled = true;
       extraPhotosInput.value = "";
       
-      // 見た目も少し薄くして「入力不可」を分かりやすくする（任意）
       workTimeSelect.style.opacity = "0.5";
       extraPhotosInput.style.opacity = "0.5";
+
+    } else if (workType === 'regular') {
+      // 2. 定期清掃のみ：時間は「無効」、写真は「有効」
+      workTimeSelect.disabled = true;
+      workTimeSelect.value = "";
+      extraPhotosInput.disabled = false; // 写真は送れる
+      
+      workTimeSelect.style.opacity = "0.5";
+      extraPhotosInput.style.opacity = "1.0";
+
     } else {
-      // それ以外（フィルター清掃を含む場合）は有効化
+      // 3. その他（フィルター関連）：時間も写真も「有効」
       workTimeSelect.disabled = false;
       extraPhotosInput.disabled = false;
       
-      // 見た目を元に戻す
       workTimeSelect.style.opacity = "1.0";
       extraPhotosInput.style.opacity = "1.0";
     }
+  }
+});
   }
 });
 
