@@ -93,7 +93,7 @@ async function send() {
         singleImage: allImages[i]
       };
 
-      const response = await fetch("https://script.google.com/macros/s/AKfycbxTPhLoR2J2klaB3whBEZBQPCwvCdGgZ9joSUa4CuLJJ4cwYg8Toi0sQCERLZ_ymzwp0g/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbzot7ssD_uTsXbFZKuPX5CNnIkXp0MgHaLENmc3MVfrcVbxFNjwsVbFRf_iSeWXZ5qChw/exec", {
         method: "POST",
         body: JSON.stringify(payload)
       });
