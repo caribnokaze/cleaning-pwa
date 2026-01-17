@@ -74,10 +74,7 @@ async function send() {
 
     // --- B. 【重要】通信せず、ブラウザのDBに保存だけする ---
     const total = allImages.length;
-    for (let i = 0; i < total; i++) {
-      btn.innerText = `送信完了`;
-      btn.style.background = "#28a745";
-      
+    for (let i = 0; i < total; i++) {      
       // IndexedDB（Dexie）に保存
       await db.queue.add({
         payload: {
@@ -96,7 +93,15 @@ async function send() {
     if (navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage('START_UPLOAD');
     }
-
+    btn.innerText = "送信完了";
+    btn.style.background = "#28a745";
+    
+    const msg = document.createElement("p");
+    msg.id = "success-msg";
+    msg.innerHTML = `<strong>${total}枚の送信予約を受け付けました。</strong><br>3秒後に画面を戻します。`;
+    msg.style.textAlign = "center";
+    msg.style.color = "#28a745";
+    btn.parentNode.appendChild(msg);
     setTimeout(() => {
       location.reload();
     }, 3000);
