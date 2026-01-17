@@ -53,7 +53,7 @@ async function send() {
     const compressionPromises = [];
     for (let i = 0; i < files.length; i++) {
       compressionPromises.push(
-        compressToBase64(files[i], 500, 0.15).then(data => ({
+        compressToBase64(files[i], 800, 0.3).then(data => ({
           name: `${site}_(${reportDate})_${staff}_${i + 1}`,
           data: data,
           isExtra: false
@@ -62,7 +62,7 @@ async function send() {
     }
     for (let i = 0; i < extraFiles.length; i++) {
       compressionPromises.push(
-        compressToBase64(extraFiles[i], 500, 0.15).then(data => ({
+        compressToBase64(extraFiles[i], 800, 0.3).then(data => ({
           name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
           data: data,
           isExtra: true
