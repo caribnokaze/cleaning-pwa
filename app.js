@@ -91,6 +91,11 @@ async function send() {
       });
     }
 
+    // ★追加：Service Workerに「保存が終わったから送信を開始して」と合図を送る
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage('START_UPLOAD');
+    }
+
     // 保存が終わったら、即座に成功メッセージを出して画面をリロード
     alert(`${total}枚の送信予約を完了しました！\nこのまま画面を閉じても、裏側で順番に送信されます。`);
     location.reload();
