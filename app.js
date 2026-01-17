@@ -20,9 +20,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/**
- * 2. メインの送信関数
- */
 async function send() {
   const btn = document.querySelector("button");
   try {
@@ -50,12 +47,10 @@ async function send() {
     const workTypeLabel = workTypeLabels[workType] || "その他";
 
     btn.disabled = true;
-    btn.innerText = "画像を圧縮中...";
+    btn.innerText = "データを保存中..."; // 通信ではなく保存であることを明示
 
-    // --- A. 全ての画像を並列で一斉に圧縮する ---
+    // --- A. 画像の圧縮処理 ---
     const compressionPromises = [];
-
-    // 通常写真の圧縮
     for (let i = 0; i < files.length; i++) {
       compressionPromises.push(
         compressToBase64(files[i], 500, 0.15).then(data => ({
@@ -65,8 +60,6 @@ async function send() {
         }))
       );
     }
-
-    // 追加写真の圧縮
     for (let i = 0; i < extraFiles.length; i++) {
       compressionPromises.push(
         compressToBase64(extraFiles[i], 500, 0.15).then(data => ({
@@ -79,37 +72,32 @@ async function send() {
 
     const allImages = await Promise.all(compressionPromises);
 
-    // --- B. 圧縮されたデータを1枚ずつ順番に送信 ---
+    // --- B. 【重要】通信せず、ブラウザのDBに保存だけする ---
     const total = allImages.length;
     for (let i = 0; i < total; i++) {
-      btn.innerText = `送信中 (${i + 1} / ${total}枚目)`;
+      btn.innerText = `保存中 (${i + 1} / ${total}枚目)`;
 
-      const payload = {
-        staff,
-        site,
-        reportDate,
-        workTypeLabel,
-        workTime,
-        singleImage: allImages[i]
-      };
-
-      const response = await fetch("https://script.google.com/macros/s/AKfycbzot7ssD_uTsXbFZKuPX5CNnIkXp0MgHaLENmc3MVfrcVbxFNjwsVbFRf_iSeWXZ5qChw/exec", {
-        method: "POST",
-        body: JSON.stringify(payload)
+      // IndexedDB（Dexie）に保存
+      await db.queue.add({
+        payload: {
+          staff,
+          site,
+          reportDate,
+          workTypeLabel,
+          workTime,
+          singleImage: allImages[i]
+        },
+        status: 'pending' // sw.jsがこのステータスを見て送信します
       });
-
-      const result = await response.text();
-      if (!result.includes("OK")) {
-        throw new Error(`${i + 1}枚目の送信でエラー: ${result}`);
-      }
     }
 
-    alert("すべての送信が完了しました！\nお疲れ様でした。");
+    // 保存が終わったら、即座に成功メッセージを出して画面をリロード
+    alert(`${total}枚の送信予約を完了しました！\nこのまま画面を閉じても、裏側で順番に送信されます。`);
     location.reload();
 
   } catch (e) {
     console.error(e);
-    alert("エラーが発生しました: " + e.message);
+    alert("保存中にエラーが発生しました: " + e.message);
   } finally {
     btn.disabled = false;
     btn.innerText = "送信";
