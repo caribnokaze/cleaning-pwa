@@ -4,36 +4,40 @@ importScripts('https://unpkg.com/dexie/dist/dexie.js');
 const db = new Dexie("PhotoUploadDB");
 db.version(1).stores({ queue: '++id, status' });
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzgrnfEbb6UNqg8KSLFEQgyoIhfD8ZGxb_Yx2CJu8sma9jt-FyF8W2iEXKHqziKBYIdow/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzgrnfEbb6UNqg8KSLFEQgyoIhfD8ZGxb_Yx2CJu8sma9jt-FyF8W2iEXKHqziKBYIdow/exec"; // 必ずご自身のURLに書き換えてください
 
-// 画面が閉じられていても、定期的に実行される
+// A. 画面（app.js）から「保存したよ」という通知を受け取ったらすぐに実行
+self.addEventListener('message', (event) => {
+  if (event.data === 'START_UPLOAD') {
+    processQueue();
+  }
+});
+
+// B. 定期的なチェックも継続（念のため）
 setInterval(() => {
   processQueue();
-}, 10000); // 10秒おきにチェック
+}, 10000);
 
 async function processQueue() {
-  // 「pending（未送信）」のものを取得
   const items = await db.queue.where("status").equals("pending").toArray();
   if (items.length === 0) return;
 
   for (const item of items) {
     try {
-      // 送信中ステータスに変更して重複送信防止
       await db.queue.update(item.id, { status: 'sending' });
 
-      const response = await fetch(GAS_URL, {
+      // 送信（画面が開いていても裏で並行して走ります）
+      await fetch(GAS_URL, {
         method: "POST",
-        mode: "no-cors", 
+        mode: "no-cors",
         body: JSON.stringify(item.payload)
       });
 
-      // 成功したらDBから削除
       await db.queue.delete(item.id);
       console.log("送信成功");
     } catch (e) {
-      // 失敗したら「pending」に戻して次回リトライ
       await db.queue.update(item.id, { status: 'pending' });
-      console.error("バックグラウンド送信失敗、リトライ待機中...");
+      console.error("送信失敗、リトライ待機...");
     }
   }
 }
