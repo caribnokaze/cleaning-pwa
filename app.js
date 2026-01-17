@@ -75,7 +75,7 @@ async function send() {
     // --- B. 【重要】通信せず、ブラウザのDBに保存だけする ---
     const total = allImages.length;
     for (let i = 0; i < total; i++) {
-      btn.innerText = `保存中 (${i + 1} / ${total}枚目)`;
+      btn.innerText = `送信完了`;
 
       // IndexedDB（Dexie）に保存
       await db.queue.add({
