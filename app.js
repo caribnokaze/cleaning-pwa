@@ -22,6 +22,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function send() {
   const btn = document.querySelector("button");
+  let isSuccess = false; // ★追加：成功したかどうかを判定するフラグ
+
   try {
     const staff = document.getElementById("staff").value;
     const site = document.getElementById("site").value;
@@ -32,7 +34,6 @@ async function send() {
     const workTime = document.getElementById("workTime").value;
     const extraFiles = document.getElementById("extraPhotos").files;
 
-    // バリデーション
     if (!site || !staff || !reportDate || !workType || !files.length) {
       alert("必須項目をすべて入力してください");
       return;
@@ -47,9 +48,8 @@ async function send() {
     const workTypeLabel = workTypeLabels[workType] || "その他";
 
     btn.disabled = true;
-    btn.innerText = "データを保存中..."; // 通信ではなく保存であることを明示
+    btn.innerText = "データを保存中...";
 
-    // --- A. 画像の圧縮処理 ---
     const compressionPromises = [];
     for (let i = 0; i < files.length; i++) {
       compressionPromises.push(
@@ -72,10 +72,8 @@ async function send() {
 
     const allImages = await Promise.all(compressionPromises);
 
-    // --- B. 【重要】通信せず、ブラウザのDBに保存だけする ---
     const total = allImages.length;
     for (let i = 0; i < total; i++) {      
-      // IndexedDB（Dexie）に保存
       await db.queue.add({
         payload: {
           staff,
@@ -85,23 +83,30 @@ async function send() {
           workTime,
           singleImage: allImages[i]
         },
-        status: 'pending' // sw.jsがこのステータスを見て送信します
+        status: 'pending'
       });
     }
 
-    // ★追加：Service Workerに「保存が終わったから送信を開始して」と合図を送る
     if (navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage('START_UPLOAD');
     }
+
+    // ★成功フラグを立てる
+    isSuccess = true; 
+
+    // 表示の更新
     btn.innerText = "送信完了";
     btn.style.background = "#28a745";
+    btn.style.color = "#ffffff";
     
     const msg = document.createElement("p");
     msg.id = "success-msg";
     msg.innerHTML = `<strong>${total}枚の送信予約を受け付けました。</strong><br>3秒後に画面を戻します。`;
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
+    msg.style.marginTop = "10px";
     btn.parentNode.appendChild(msg);
+
     setTimeout(() => {
       location.reload();
     }, 3000);
@@ -109,9 +114,15 @@ async function send() {
   } catch (e) {
     console.error(e);
     alert("保存中にエラーが発生しました: " + e.message);
-  } finally {
+    // 失敗した時だけボタンを戻す
     btn.disabled = false;
     btn.innerText = "送信";
+  } finally {
+    // ★修正ポイント：成功した場合はボタンを戻さない
+    if (!isSuccess) {
+      btn.disabled = false;
+      btn.innerText = "送信";
+    }
   }
 }
 
