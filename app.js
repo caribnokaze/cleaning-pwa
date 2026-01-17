@@ -70,14 +70,14 @@ async function send() {
     // --- (圧縮と保存の処理は変更なし) ---
     const compressionPromises = [];
     for (let i = 0; i < files.length; i++) {
-      compressionPromises.push(compressToBase64(files[i], 800, 0.3).then(data => ({
+      compressionPromises.push(compressToBase64(files[i], 600, 0.3).then(data => ({
         name: `${site}_(${reportDate})_${staff}_${i + 1}`,
         data: data,
         isExtra: false
       })));
     }
     for (let i = 0; i < extraFiles.length; i++) {
-      compressionPromises.push(compressToBase64(extraFiles[i], 800, 0.3).then(data => ({
+      compressionPromises.push(compressToBase64(extraFiles[i], 600, 0.3).then(data => ({
         name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
         data: data,
         isExtra: true
