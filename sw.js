@@ -4,7 +4,7 @@ importScripts('https://unpkg.com/dexie/dist/dexie.js');
 const db = new Dexie("PhotoUploadDB");
 db.version(1).stores({ queue: '++id, status' });
 
-const GAS_URL = "あなたのGASのURL";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzot7ssD_uTsXbFZKuPX5CNnIkXp0MgHaLENmc3MVfrcVbxFNjwsVbFRf_iSeWXZ5qChw/exec";
 
 // 画面が閉じられていても、定期的に実行される
 setInterval(() => {
