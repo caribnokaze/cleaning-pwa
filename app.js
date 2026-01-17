@@ -22,9 +22,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function send() {
   const btn = document.querySelector("button");
-  let isSuccess = false; // ★追加：成功したかどうかを判定するフラグ
+  let isSuccess = false;
+
+  // ★1. 画面全体をロックするレイヤーを作成・表示
+  const lockLayer = document.createElement("div");
+  lockLayer.id = "screen-lock";
+  lockLayer.style.position = "fixed";
+  lockLayer.style.top = "0";
+  lockLayer.style.left = "0";
+  lockLayer.style.width = "100%";
+  lockLayer.style.height = "100%";
+  lockLayer.style.background = "rgba(0,0,0,0.1)"; // ほんのりグレー
+  lockLayer.style.zIndex = "9999"; // 一番手前に
+  lockLayer.style.cursor = "not-allowed";
+  document.body.appendChild(lockLayer);
 
   try {
+    // --- (バリデーションと変数取得は変更なし) ---
     const staff = document.getElementById("staff").value;
     const site = document.getElementById("site").value;
     const reportDate = document.getElementById("reportDate").value;
@@ -36,6 +50,8 @@ async function send() {
 
     if (!site || !staff || !reportDate || !workType || !files.length) {
       alert("必須項目をすべて入力してください");
+      // ★バリデーション失敗時はロックを解除
+      document.body.removeChild(lockLayer);
       return;
     }
 
@@ -47,42 +63,32 @@ async function send() {
     };
     const workTypeLabel = workTypeLabels[workType] || "その他";
 
+    // 保存開始
     btn.disabled = true;
     btn.innerText = "データを保存中...";
 
+    // --- (圧縮と保存の処理は変更なし) ---
     const compressionPromises = [];
     for (let i = 0; i < files.length; i++) {
-      compressionPromises.push(
-        compressToBase64(files[i], 800, 0.3).then(data => ({
-          name: `${site}_(${reportDate})_${staff}_${i + 1}`,
-          data: data,
-          isExtra: false
-        }))
-      );
+      compressionPromises.push(compressToBase64(files[i], 800, 0.3).then(data => ({
+        name: `${site}_(${reportDate})_${staff}_${i + 1}`,
+        data: data,
+        isExtra: false
+      })));
     }
     for (let i = 0; i < extraFiles.length; i++) {
-      compressionPromises.push(
-        compressToBase64(extraFiles[i], 800, 0.3).then(data => ({
-          name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
-          data: data,
-          isExtra: true
-        }))
-      );
+      compressionPromises.push(compressToBase64(extraFiles[i], 800, 0.3).then(data => ({
+        name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
+        data: data,
+        isExtra: true
+      })));
     }
 
     const allImages = await Promise.all(compressionPromises);
-
     const total = allImages.length;
     for (let i = 0; i < total; i++) {      
       await db.queue.add({
-        payload: {
-          staff,
-          site,
-          reportDate,
-          workTypeLabel,
-          workTime,
-          singleImage: allImages[i]
-        },
+        payload: { staff, site, reportDate, workTypeLabel, workTime, singleImage: allImages[i] },
         status: 'pending'
       });
     }
@@ -91,7 +97,6 @@ async function send() {
       navigator.serviceWorker.controller.postMessage('START_UPLOAD');
     }
 
-    // ★成功フラグを立てる
     isSuccess = true; 
 
     // 表示の更新
@@ -107,6 +112,7 @@ async function send() {
     msg.style.marginTop = "10px";
     btn.parentNode.appendChild(msg);
 
+    // ★リロードまでロックを維持
     setTimeout(() => {
       location.reload();
     }, 3000);
@@ -114,12 +120,15 @@ async function send() {
   } catch (e) {
     console.error(e);
     alert("保存中にエラーが発生しました: " + e.message);
-    // 失敗した時だけボタンを戻す
+    // ★エラー時は操作できるようにロックを解除
+    if (document.getElementById("screen-lock")) {
+      document.body.removeChild(lockLayer);
+    }
     btn.disabled = false;
     btn.innerText = "送信";
   } finally {
-    // ★修正ポイント：成功した場合はボタンを戻さない
     if (!isSuccess) {
+      // 成功時以外はボタンを戻す
       btn.disabled = false;
       btn.innerText = "送信";
     }
