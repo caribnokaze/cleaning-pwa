@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 async function send() {
-  const btn = document.getElementById("submitBtn");
+  const btn = document.querySelector("button");
   try {
     const staff = document.getElementById("staff").value;
     const site = document.getElementById("site").value;
@@ -32,7 +32,7 @@ async function send() {
     const workTime = document.getElementById("workTime").value;
     const extraFiles = document.getElementById("extraPhotos").files;
 
-    // 1. バリデーション
+    // バリデーション
     if (!site || !staff || !reportDate || !workType || !files.length) {
       alert("必須項目をすべて入力してください");
       return;
@@ -47,13 +47,10 @@ async function send() {
     const workTypeLabel = workTypeLabels[workType] || "その他";
 
     btn.disabled = true;
-    btn.innerText = "画像圧縮中..."; 
-    btn.style.opacity = "0.5";
+    btn.innerText = "データを保存中..."; // 通信ではなく保存であることを明示
 
-    // 2. 画像の圧縮処理 (Promises配列を定義)
-    const compressionPromises = []; // ここが漏れていたためエラーになっていました
-
-    // 通常写真の圧縮予約
+    // --- A. 画像の圧縮処理 ---
+    const compressionPromises = [];
     for (let i = 0; i < files.length; i++) {
       compressionPromises.push(
         compressToBase64(files[i], 500, 0.15).then(data => ({
@@ -63,7 +60,6 @@ async function send() {
         }))
       );
     }
-    // 追加写真の圧縮予約
     for (let i = 0; i < extraFiles.length; i++) {
       compressionPromises.push(
         compressToBase64(extraFiles[i], 500, 0.15).then(data => ({
@@ -74,14 +70,14 @@ async function send() {
       );
     }
 
-    // 圧縮実行
     const allImages = await Promise.all(compressionPromises);
 
-    // 3. ブラウザのDB（IndexedDB）に保存
-    btn.innerText = "予約データを保存中..."; 
+    // --- B. 【重要】通信せず、ブラウザのDBに保存だけする ---
     const total = allImages.length;
-
     for (let i = 0; i < total; i++) {
+      btn.innerText = `保存中 (${i + 1} / ${total}枚目)`;
+
+      // IndexedDB（Dexie）に保存
       await db.queue.add({
         payload: {
           staff,
@@ -91,11 +87,11 @@ async function send() {
           workTime,
           singleImage: allImages[i]
         },
-        status: 'pending'
+        status: 'pending' // sw.jsがこのステータスを見て送信します
       });
     }
 
-    // 保存完了アラート
+    // 保存が終わったら、即座に成功メッセージを出して画面をリロード
     alert(`${total}枚の送信予約を完了しました！\nこのまま画面を閉じても、裏側で順番に送信されます。`);
     location.reload();
 
@@ -105,7 +101,6 @@ async function send() {
   } finally {
     btn.disabled = false;
     btn.innerText = "送信";
-    btn.style.opacity = "1.0";
   }
 }
 
