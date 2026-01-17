@@ -284,6 +284,25 @@
     <img src="images/tocorologo.png" alt="TOCORO Clean Team ロゴ" class="footer-logo">
   </div>
 
+  <script>
+    // ブラウザ内DBの設定
+    const db = new Dexie("PhotoUploadDB");
+    db.version(1).stores({
+      queue: '++id, status' 
+    });
+
+    // Service Worker（裏方の作業員）の登録
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW registered'))
+          .catch(err => console.log('SW registration failed', err));
+      });
+    }
+
+    // 以前の app.js 内のバリデーションを活かすため、ボタンを監視するなどの処理は app.js 側に記述
+  </script>
+
   <script src="app.js"></script>
 </body>
 </html>
