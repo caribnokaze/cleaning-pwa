@@ -110,7 +110,7 @@ async function send() {
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
     msg.style.marginTop = "10px";
-    btn.parentNode.appendChild(msg);
+    btn.parentNode.insertBefore(msg, btn);
 
     // ★リロードまでロックを維持
     setTimeout(() => {
