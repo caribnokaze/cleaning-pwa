@@ -76,7 +76,8 @@ async function send() {
     const total = allImages.length;
     for (let i = 0; i < total; i++) {
       btn.innerText = `送信完了`;
-
+      btn.style.background = "#28a745";
+      
       // IndexedDB（Dexie）に保存
       await db.queue.add({
         payload: {
@@ -96,9 +97,9 @@ async function send() {
       navigator.serviceWorker.controller.postMessage('START_UPLOAD');
     }
 
-    // 保存が終わったら、即座に成功メッセージを出して画面をリロード
-    alert(`${total}枚の送信予約を完了しました！\nこのまま画面を閉じても、裏側で順番に送信されます。`);
-    location.reload();
+    setTimeout(() => {
+      location.reload();
+    }, 3000);
 
   } catch (e) {
     console.error(e);
