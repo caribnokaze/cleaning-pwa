@@ -152,10 +152,9 @@ async function send() {
 function compressToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
+      // 画像が読み込まれた後の処理
       img.onload = () => {
         const canvas = document.createElement("canvas");
         let width = img.width;
@@ -168,11 +167,28 @@ function compressToBase64(file, maxWidth, quality) {
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        
+        // メモリ節約のため
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl);
       };
-      img.onerror = () => reject(new Error("画像の読み込み失敗"));
+      
+      // 読み込みエラー時の詳細ログ
+      img.onerror = (err) => {
+        console.error("Image object error:", err);
+        reject(new Error("画像のデコードに失敗しました。ファイルが壊れているか、形式が非対応です。"));
+      };
+
+      // srcにセットする前に onload を定義するのがブラウザの作法です
+      img.src = event.target.result;
     };
-    reader.onerror = () => reject(new Error("ファイル読み取り失敗"));
+    
+    reader.onerror = (err) => {
+      console.error("FileReader error:", err);
+      reject(new Error("ファイルの読み取りに失敗しました。"));
+    };
+    
+    reader.readAsDataURL(file);
   });
 }
 
