@@ -36,6 +36,7 @@ setInterval(() => {
   processQueue();
 }, 10000);
 
+// sw.js 内の processQueue 関数
 async function processQueue() {
   const items = await db.queue
     .filter(item => item.status === 'pending' || !item.status)
@@ -47,22 +48,24 @@ async function processQueue() {
     try {
       await db.queue.update(item.id, { status: 'sending' });
 
-      // データをBlob形式（text/plain）で包む
-      // これにより、Safariの制限を回避しつつ、Chromeのリダイレクト耐性を高めます
-      const payloadBlob = new Blob([JSON.stringify(item.payload)], { type: 'text/plain' });
+      // Chrome の Failed to fetch 回避策:
+      // 文字列を直接送るのではなく、Blob 形式にして Content-Type を「単純なリクエスト」に固定する
+      const blob = new Blob([JSON.stringify(item.payload)], { type: 'text/plain' });
 
       await fetch(GAS_URL, {
         method: "POST",
-        mode: "no-cors",
-        body: payloadBlob, // 直接文字列ではなくBlobを渡す
-        keepalive: true    // Chromeでの「リロードによる切断」を防ぐ重要フラグ
+        mode: "no-cors", 
+        body: blob,
+        keepalive: true, // リロード対策
+        credentials: 'omit' // Chrome の CORS エラーを抑制するために追加
       });
 
+      // no-cors の場合、成功判定ができないため、通信が終わったら削除
       await db.queue.delete(item.id);
-      console.log("GASへの送信に成功しました ID:", item.id);
+      console.log("GASへの送信処理を完了しました ID:", item.id);
     } catch (e) {
       await db.queue.update(item.id, { status: 'pending' });
-      console.error("送信エラー:", e);
+      console.error("送信エラー (Fetch失敗):", e);
     }
   }
 }
