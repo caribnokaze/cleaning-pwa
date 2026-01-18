@@ -1,4 +1,14 @@
-// sw.js
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener('activate', (event) => {
+  // すべてのタブを即座にこのWorkerの支配下に置く
+  event.waitUntil(self.clients.claim());
+});
+
 importScripts('https://unpkg.com/dexie/dist/dexie.js');
 
 const db = new Dexie("PhotoUploadDB");
