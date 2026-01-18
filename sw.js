@@ -60,10 +60,6 @@ async function processQueue() {
         // 通信後、データベースから削除
         await db.queue.delete(item.id);
         
-        // ★重要：GASが画像を保存して一息つく時間を強制的に作る
-        // ログの「実行時間」が約4秒なので、5秒待つのが最も安全です
-        await new Promise(r => setTimeout(r, 5000)); 
-
       } catch (e) {
         await db.queue.update(item.id, { status: 'pending' });
         console.error("個別送信失敗:", e);
