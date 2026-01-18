@@ -141,27 +141,38 @@ async function send() {
 function compressToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+    
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
       img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
+        try {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          resolve(dataUrl);
+        } catch (e) {
+          reject(new Error("キャンバス処理エラー: " + e.message));
         }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
       };
-      img.onerror = () => reject(new Error("画像の読み込み失敗"));
+      
+      img.onerror = () => reject(new Error(`画像デコード失敗: ${file.name}`));
+      img.src = event.target.result;
     };
-    reader.onerror = () => reject(new Error("ファイル読み取り失敗"));
+    
+    reader.onerror = () => reject(new Error(`ファイル読み取り失敗: ${file.name}`));
+    reader.readAsDataURL(file);
   });
 }
 
