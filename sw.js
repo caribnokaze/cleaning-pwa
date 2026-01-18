@@ -1,5 +1,5 @@
 // 1. ライブラリ読み込み
-importScripts('https://unpkg.com/dexie/dist/dexie.js');
+importScripts('https://unpkg.com/dexie@3.2.4/dist/dexie.js');
 
 // 2. データベース設定
 const db = new Dexie("PhotoUploadDB");
