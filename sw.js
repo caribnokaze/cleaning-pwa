@@ -54,9 +54,6 @@ async function processQueue() {
       await fetch(GAS_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify(item.payload)
       });
 
