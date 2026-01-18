@@ -87,7 +87,31 @@ async function send() {
       })));
     }
 
-    const allImages = await Promise.all(compressionPromises);
+    const allImages = [];
+const allFiles = [
+  ...Array.from(files).map(f => ({ file: f, isExtra: false })),
+  ...Array.from(extraFiles).map(f => ({ file: f, isExtra: true }))
+];
+
+btn.innerText = "画像を圧縮中...";
+
+for (let i = 0; i < allFiles.length; i++) {
+  const item = allFiles[i];
+  try {
+    const label = item.isExtra ? `_${workTypeLabel}` : "";
+    const compressedData = await compressToBase64(item.file, 800, 0.3);
+    allImages.push({
+      name: `${site}_(${reportDate})_${staff}${label}_${i + 1}`,
+      data: compressedData,
+      isExtra: item.isExtra
+    });
+    // 進捗を表示するとユーザーが安心します
+    btn.innerText = `圧縮中 (${i + 1}/${allFiles.length})`;
+  } catch (err) {
+    console.error(err);
+    alert(`画像(${i + 1}枚目)の圧縮に失敗しました。この画像をスキップするか、やり直してください。`);
+  }
+}
     const total = allImages.length;
     for (let i = 0; i < total; i++) {      
       await db.queue.add({
