@@ -251,3 +251,29 @@ document.getElementById('extraPhotos').addEventListener('change', updateButtonSt
 
 // ページ読み込み時にも一度実行して初期状態を反映
 window.addEventListener('DOMContentLoaded', updateButtonState);
+
+/**
+ * 6. Service Workerの登録と強制更新設定
+ * Chromeのキャッシュ問題を解決するために、古い登録を一度解除してから最新版を読み込みます。
+ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      // 既存の登録をすべて解除して、クリーンな状態にする
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+      // 新しく sw.js を登録
+      return navigator.serviceWorker.register('./sw.js');
+    }).then(reg => {
+      console.log('Service Worker を最新状態で登録しました');
+      
+      // ページ読み込み時に、未送信データがあれば送信を開始させる
+      if (reg.active) {
+        reg.active.postMessage('START_UPLOAD');
+      }
+    }).catch(err => {
+      console.error('Service Worker 登録失敗:', err);
+    });
+  });
+}
