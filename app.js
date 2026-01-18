@@ -2,46 +2,47 @@
  * 1. ページ読み込み時の初期設定
  */
 window.addEventListener('DOMContentLoaded', () => {
-  // 日付をセット
   const dateInput = document.getElementById("reportDate");
   if (dateInput) dateInput.valueAsDate = new Date();
 
-  // 初期状態で「通常清掃のみ」が選択されている場合の無効化処理を強制実行
   const workTimeSelect = document.getElementById('workTime');
   const extraPhotosInput = document.getElementById('extraPhotos');
   const defaultWorkType = document.querySelector('input[name="workType"]:checked');
 
-  // 要素が存在し、かつ「通常清掃のみ(normal)」が選択されている場合
   if (workTimeSelect && extraPhotosInput && defaultWorkType && defaultWorkType.value === 'normal') {
     workTimeSelect.disabled = true;
     extraPhotosInput.disabled = true;
     workTimeSelect.style.opacity = "0.5";
     extraPhotosInput.style.opacity = "0.5";
   }
+
+  updateButtonState();
 });
 
 /**
- * 2. メインの送信関数
+ * 2. メイン送信関数（UI直送）
  */
 async function send() {
-  const btn = document.querySelector("button");
+  const btn = document.getElementById("submitBtn");
   let isSuccess = false;
 
-  // ★1. 画面全体をロックするレイヤーを作成・表示
+  // 画面ロック
   const lockLayer = document.createElement("div");
   lockLayer.id = "screen-lock";
-  lockLayer.style.position = "fixed";
-  lockLayer.style.top = "0";
-  lockLayer.style.left = "0";
-  lockLayer.style.width = "100%";
-  lockLayer.style.height = "100%";
-  lockLayer.style.background = "rgba(0,0,0,0.1)"; // ほんのりグレー
-  lockLayer.style.zIndex = "9999"; // 一番手前に
-  lockLayer.style.cursor = "not-allowed";
+  Object.assign(lockLayer.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.1)",
+    zIndex: "9999",
+    cursor: "not-allowed"
+  });
   document.body.appendChild(lockLayer);
 
   try {
-    // --- (バリデーションと変数取得は変更なし) ---
+    // 入力取得
     const staff = document.getElementById("staff").value;
     const site = document.getElementById("site").value;
     const reportDate = document.getElementById("reportDate").value;
@@ -53,213 +54,160 @@ async function send() {
 
     if (!site || !staff || !reportDate || !workType || !files.length) {
       alert("必須項目をすべて入力してください");
-      // ★バリデーション失敗時はロックを解除
-      document.body.removeChild(lockLayer);
+      lockLayer.remove();
       return;
     }
 
     const workTypeLabels = {
-      "normal": "通常清掃のみ",
-      "full": "定期清掃＋フィルター清掃",
-      "regular": "定期清掃のみ",
-      "filter": "フィルター清掃のみ"
+      normal: "通常清掃のみ",
+      full: "定期清掃＋フィルター清掃",
+      regular: "定期清掃のみ",
+      filter: "フィルター清掃のみ"
     };
     const workTypeLabel = workTypeLabels[workType] || "その他";
 
-    // 保存開始
     btn.disabled = true;
-    btn.innerText = "データを保存中...";
+    btn.innerText = "画像を圧縮中...";
 
-    // --- (圧縮と保存の処理は変更なし) ---
-    const compressionPromises = [];
-    for (let i = 0; i < files.length; i++) {
-      compressionPromises.push(compressToBase64(files[i], 800, 0.3).then(data => ({
-        name: `${site}_(${reportDate})_${staff}_${i + 1}`,
-        data: data,
-        isExtra: false
-      })));
-    }
-    for (let i = 0; i < extraFiles.length; i++) {
-      compressionPromises.push(compressToBase64(extraFiles[i], 800, 0.3).then(data => ({
-        name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
-        data: data,
-        isExtra: true
-      })));
-    }
+    // 圧縮対象をまとめる
+    const allFiles = [
+      ...Array.from(files).map(f => ({ file: f, isExtra: false })),
+      ...Array.from(extraFiles).map(f => ({ file: f, isExtra: true }))
+    ];
 
     const allImages = [];
-const allFiles = [
-  ...Array.from(files).map(f => ({ file: f, isExtra: false })),
-  ...Array.from(extraFiles).map(f => ({ file: f, isExtra: true }))
-];
 
-btn.innerText = "画像を圧縮中...";
+    // 画像圧縮（逐次）
+    for (let i = 0; i < allFiles.length; i++) {
+      const item = allFiles[i];
+      const label = item.isExtra ? `_${workTypeLabel}` : "";
+      const compressed = await compressToBase64(item.file, 800, 0.3);
 
-for (let i = 0; i < allFiles.length; i++) {
-  const item = allFiles[i];
-  try {
-    const label = item.isExtra ? `_${workTypeLabel}` : "";
-    const compressedData = await compressToBase64(item.file, 800, 0.3);
-    allImages.push({
-      name: `${site}_(${reportDate})_${staff}${label}_${i + 1}`,
-      data: compressedData,
-      isExtra: item.isExtra
-    });
-    // 進捗を表示するとユーザーが安心します
-    btn.innerText = `圧縮中 (${i + 1}/${allFiles.length})`;
-  } catch (err) {
-    console.error(err);
-    alert(`画像(${i + 1}枚目)の圧縮に失敗しました。この画像をスキップするか、やり直してください。`);
-  }
-}
-    const total = allImages.length;
-    for (let i = 0; i < total; i++) {      
-      await db.queue.add({
-        payload: { staff, site, reportDate, workTypeLabel, workTime, singleImage: allImages[i] },
-        status: 'pending'
+      allImages.push({
+        name: `${site}_(${reportDate})_${staff}${label}_${i + 1}`,
+        data: compressed,
+        isExtra: item.isExtra
       });
+
+      btn.innerText = `圧縮中 (${i + 1}/${allFiles.length})`;
     }
 
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage('START_UPLOAD');
-      console.log("Message Sent");
+    // UI直送（1枚ずつ await）
+    btn.innerText = `送信中 (0/${allImages.length})`;
+
+    for (let i = 0; i < allImages.length; i++) {
+      await fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          staff,
+          site,
+          reportDate,
+          workTypeLabel,
+          workTime,
+          singleImage: allImages[i]
+        })
+      });
+
+      btn.innerText = `送信中 (${i + 1}/${allImages.length})`;
+
+      // GAS安定化ウェイト（重要）
+      await new Promise(r => setTimeout(r, 500));
     }
 
-    isSuccess = true; 
-
-    // 表示の更新
+    // 成功表示
+    isSuccess = true;
     btn.innerText = "送信完了";
     btn.style.background = "#28a745";
-    btn.style.color = "#ffffff";
-    
+    btn.style.color = "#fff";
+
     const msg = document.createElement("p");
-    msg.id = "success-msg";
-    msg.innerHTML = `<strong>お疲れ様でした！</strong><br>3秒後に画面を戻します。`;
+    msg.innerHTML = "<strong>お疲れ様でした！</strong><br>3秒後に画面を戻します。";
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
-    msg.style.marginTop = "10px";
-    msg.style.marginBottom = "10px"; // ボタンとの間に少し隙間を作る
+    msg.style.margin = "10px 0";
 
-    // ★重要：ボタンの「親要素」に対して、ボタンの「前（上）」に挿入する
     btn.parentNode.insertBefore(msg, btn);
 
-    // ボタンの見た目を更新
-    btn.innerText = "送信完了";
-    btn.style.background = "#28a745";
-    btn.style.color = "#ffffff";
-
-    // 3秒後にリロード
-    setTimeout(() => {
-      location.reload();
-    }, 3000);
+    setTimeout(() => location.reload(), 3000);
 
   } catch (e) {
     console.error(e);
-    alert("保存中にエラーが発生しました: " + e.message);
-    // ★エラー時は操作できるようにロックを解除
-    if (document.getElementById("screen-lock")) {
-      document.body.removeChild(lockLayer);
-    }
+    alert("送信中にエラーが発生しました。\n通信環境を確認してください。");
     btn.disabled = false;
     btn.innerText = "送信";
   } finally {
-    if (!isSuccess) {
-      // 成功時以外はボタンを戻す
-      btn.disabled = false;
-      btn.innerText = "送信";
-    }
+    if (!isSuccess) lockLayer.remove();
   }
 }
+
 /**
- * 3. 画像圧縮関数
+ * 3. 画像圧縮
  */
 function compressToBase64(file, maxWidth, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = e => {
       const img = new Image();
-      // 画像が読み込まれた後の処理
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
+        let { width, height } = img;
+
         if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
+          height = Math.round(height * maxWidth / width);
           width = maxWidth;
         }
+
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // メモリ節約のため
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(dataUrl);
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
       };
-      
-      // 読み込みエラー時の詳細ログ
-      img.onerror = (err) => {
-        console.error("Image object error:", err);
-        reject(new Error("画像のデコードに失敗しました。ファイルが壊れているか、形式が非対応です。"));
-      };
-
-      // srcにセットする前に onload を定義するのがブラウザの作法です
-      img.src = event.target.result;
+      img.onerror = () => reject(new Error("画像デコード失敗"));
+      img.src = e.target.result;
     };
-    
-    reader.onerror = (err) => {
-      console.error("FileReader error:", err);
-      reject(new Error("ファイルの読み取りに失敗しました。"));
-    };
-    
+    reader.onerror = () => reject(new Error("FileReader失敗"));
     reader.readAsDataURL(file);
   });
 }
 
 /**
- * 4. 清掃区分による入力制限の切り替え
+ * 4. 清掃区分切替
  */
-document.addEventListener('change', (e) => {
-  if (e.target.name === 'workType') {
-    const workType = e.target.value;
-    const workTimeSelect = document.getElementById('workTime');
-    const extraPhotosInput = document.getElementById('extraPhotos');
+document.addEventListener('change', e => {
+  if (e.target.name !== 'workType') return;
 
-    if (workType === 'normal') {
-      // 通常清掃のみ：時間も写真も「無効」
-      workTimeSelect.disabled = true;
-      workTimeSelect.value = "";
-      extraPhotosInput.disabled = true;
-      extraPhotosInput.value = "";
-      workTimeSelect.style.opacity = "0.5";
-      extraPhotosInput.style.opacity = "0.5";
+  const workTime = document.getElementById('workTime');
+  const extraPhotos = document.getElementById('extraPhotos');
 
-    } else if (workType === 'regular') {
-      // 定期清掃のみ：時間は「無効」、写真は「有効」
-      workTimeSelect.disabled = true;
-      workTimeSelect.value = "";
-      extraPhotosInput.disabled = false;
-      workTimeSelect.style.opacity = "0.5";
-      extraPhotosInput.style.opacity = "1.0";
-
-    } else {
-      // その他（フィルター関連）：時間も写真も「有効」
-      workTimeSelect.disabled = false;
-      extraPhotosInput.disabled = false;
-      workTimeSelect.style.opacity = "1.0";
-      extraPhotosInput.style.opacity = "1.0";
-    }
+  if (e.target.value === 'normal') {
+    workTime.disabled = true;
+    workTime.value = "";
+    extraPhotos.disabled = true;
+    extraPhotos.value = "";
+    workTime.style.opacity = extraPhotos.style.opacity = "0.5";
+  } else if (e.target.value === 'regular') {
+    workTime.disabled = true;
+    workTime.value = "";
+    extraPhotos.disabled = false;
+    workTime.style.opacity = "0.5";
+    extraPhotos.style.opacity = "1";
+  } else {
+    workTime.disabled = false;
+    extraPhotos.disabled = false;
+    workTime.style.opacity = extraPhotos.style.opacity = "1";
   }
+
+  updateButtonState();
 });
 
 /**
- * 5. 枚数制限（100枚）
+ * 5. 枚数制限
  */
-const checkFileCount = (e) => {
-  const maxFiles = 100;
-  if (e.target.files.length > maxFiles) {
-    alert(`一度に選択できるのは${maxFiles}枚までです。選択し直してください。`);
-    e.target.value = ""; 
+const checkFileCount = e => {
+  if (e.target.files.length > 100) {
+    alert("一度に選択できるのは100枚までです");
+    e.target.value = "";
   }
 };
 
@@ -267,58 +215,35 @@ document.getElementById('photos').addEventListener('change', checkFileCount);
 document.getElementById('extraPhotos').addEventListener('change', checkFileCount);
 
 /**
- * 送信ボタンの有効/無効を切り替える判定関数
+ * 6. 送信ボタン制御
  */
 function updateButtonState() {
-  const staff = document.getElementById("staff").value;
-  const site = document.getElementById("site").value;
-  const reportDate = document.getElementById("reportDate").value;
-  const files = document.getElementById("photos").files;
-  const workTypeEl = document.querySelector('input[name="workType"]:checked');
-  const workType = workTypeEl ? workTypeEl.value : "";
-  const workTime = document.getElementById("workTime").value;
-  const extraFiles = document.getElementById("extraPhotos").files;
-  const btn = document.getElementById("submitBtn");
+  const staff = staffInput.value;
+  const site = siteInput.value;
+  const reportDate = reportDateInput.value;
+  const files = photos.files;
+  const workType = document.querySelector('input[name="workType"]:checked')?.value;
+  const workTime = workTimeInput.value;
+  const extraFiles = extraPhotos.files;
+  const btn = submitBtn;
 
-  // 基本の必須チェック：担当者、現場、日付、区分、通常写真（1枚以上）
-  let isValid = staff && site && reportDate && workType && files.length > 0;
+  let valid = staff && site && reportDate && workType && files.length;
 
-  // 区分ごとの追加チェック
-  if (workType === 'full') {
-    // 定期＋フィルター：時間と追加写真の両方が必須
-    if (!workTime || extraFiles.length === 0) isValid = false;
+  if (workType === 'full' || workType === 'filter') {
+    valid = valid && workTime && extraFiles.length;
   } else if (workType === 'regular') {
-    // 定期のみ：追加写真のみ必須（時間は不要）
-    if (extraFiles.length === 0) isValid = false;
-  } else if (workType === 'filter') {
-    // フィルターのみ：時間と追加写真の両方が必須
-    if (!workTime || extraFiles.length === 0) isValid = false;
+    valid = valid && extraFiles.length;
   }
 
-  // ボタンの有効・無効を切り替え
-  btn.disabled = !isValid;
-  
-  // 見た目でも分かりやすく（有効なら不透明、無効なら半透明）
-  btn.style.opacity = isValid ? "1.0" : "0.5";
-  btn.style.cursor = isValid ? "pointer" : "not-allowed";
+  btn.disabled = !valid;
+  btn.style.opacity = valid ? "1" : "0.5";
 }
 
-/**
- * 各入力項目に「入力されたらチェックする」イベントを設定
- */
-// テキスト・日付・セレクト
-['staff', 'site', 'reportDate', 'workTime'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateButtonState);
-});
+['staff', 'site', 'reportDate', 'workTime']
+  .forEach(id => document.getElementById(id).addEventListener('input', updateButtonState));
 
-// ラジオボタン（清掃区分）
-document.getElementsByName('workType').forEach(el => {
-  el.addEventListener('change', updateButtonState);
-});
+document.getElementsByName('workType')
+  .forEach(el => el.addEventListener('change', updateButtonState));
 
-// ファイル選択（通常・追加）
 document.getElementById('photos').addEventListener('change', updateButtonState);
 document.getElementById('extraPhotos').addEventListener('change', updateButtonState);
-
-// ページ読み込み時にも一度実行して初期状態を反映
-window.addEventListener('DOMContentLoaded', updateButtonState);
