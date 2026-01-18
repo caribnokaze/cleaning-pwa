@@ -218,14 +218,14 @@ document.getElementById('extraPhotos').addEventListener('change', checkFileCount
  * 6. 送信ボタン制御
  */
 function updateButtonState() {
-  const staff = staffInput.value;
-  const site = siteInput.value;
-  const reportDate = reportDateInput.value;
-  const files = photos.files;
+  const staff = document.getElementById("staff").value;
+  const site = document.getElementById("site").value;
+  const reportDate = document.getElementById("reportDate").value;
+  const files = document.getElementById("photos").files;
   const workType = document.querySelector('input[name="workType"]:checked')?.value;
-  const workTime = workTimeInput.value;
-  const extraFiles = extraPhotos.files;
-  const btn = submitBtn;
+  const workTime = document.getElementById("workTime").value;
+  const extraFiles = document.getElementById("extraPhotos").files;
+  const btn = document.getElementById("submitBtn");
 
   let valid = staff && site && reportDate && workType && files.length;
 
