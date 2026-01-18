@@ -38,28 +38,41 @@ setInterval(() => {
 
 // sw.js の processQueue 関数
 async function processQueue() {
-  if (self.isProcessing) return; // 二重起動防止
+  // 二重起動を徹底的に防ぐ
+  if (self.isProcessing) return;
   self.isProcessing = true;
 
   try {
     const items = await db.queue.filter(item => item.status === 'pending' || !item.status).toArray();
+    if (items.length === 0) return;
+
     for (const item of items) {
       await db.queue.update(item.id, { status: 'sending' });
+
       try {
+        // 送信が終わるのを await でしっかり待つ
         await fetch(GAS_URL, {
           method: "POST",
           mode: "no-cors",
           body: JSON.stringify(item.payload)
         });
+
+        // 通信後、データベースから削除
         await db.queue.delete(item.id);
         
-        // ★重要: GAS側の処理時間を考慮し、2秒待機してから次の画像へ
-        await new Promise(r => setTimeout(r, 2000)); 
+        // ★重要：GASが画像を保存して一息つく時間を強制的に作る
+        // ログの「実行時間」が約4秒なので、5秒待つのが最も安全です
+        await new Promise(r => setTimeout(r, 5000)); 
+
       } catch (e) {
         await db.queue.update(item.id, { status: 'pending' });
+        console.error("個別送信失敗:", e);
+        // 1枚失敗したら、無理に続けない
+        break; 
       }
     }
   } finally {
+    // 全部のループが終わってからフラグを戻す
     self.isProcessing = false;
   }
 }
