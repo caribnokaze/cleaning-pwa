@@ -253,27 +253,29 @@ document.getElementById('extraPhotos').addEventListener('change', updateButtonSt
 window.addEventListener('DOMContentLoaded', updateButtonState);
 
 /**
- * 6. Service Workerの登録と強制更新設定
- * Chromeのキャッシュ問題を解決するために、古い登録を一度解除してから最新版を読み込みます。
+ * Service Workerの強制有効化と通信開始指示
  */
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      // 既存の登録をすべて解除して、クリーンな状態にする
-      for (let registration of registrations) {
-        registration.unregister();
-      }
-      // 新しく sw.js を登録
-      return navigator.serviceWorker.register('./sw.js');
-    }).then(reg => {
-      console.log('Service Worker を最新状態で登録しました');
-      
-      // ページ読み込み時に、未送信データがあれば送信を開始させる
-      if (reg.active) {
-        reg.active.postMessage('START_UPLOAD');
-      }
-    }).catch(err => {
-      console.error('Service Worker 登録失敗:', err);
+  navigator.serviceWorker.register('./sw.js').then(registration => {
+    // 新しいWorkerが見つかったらすぐに有効化を促す
+    registration.addEventListener('updatefound', () => {
+      const newWorker = registration.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          // 新しいWorkerを即座に適用
+          newWorker.postMessage({ action: 'skipWaiting' });
+        }
+      });
     });
+    
+    // ページ読み込み時に送信未完了分がないかチェック
+    if (registration.active) {
+      registration.active.postMessage('START_UPLOAD');
+    }
+  });
+
+  // Workerが入れ替わったらページをリロードして制御を確立
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log("Service Workerが更新されました");
   });
 }
