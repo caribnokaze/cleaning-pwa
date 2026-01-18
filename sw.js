@@ -36,33 +36,30 @@ setInterval(() => {
   processQueue();
 }, 10000);
 
+// sw.js の processQueue 関数
 async function processQueue() {
-  const items = await db.queue
-    .filter(item => item.status === 'pending' || !item.status)
-    .toArray();
+  if (self.isProcessing) return; // 二重起動防止
+  self.isProcessing = true;
 
-  if (items.length === 0) return;
-
-  for (const item of items) {
-    try {
+  try {
+    const items = await db.queue.filter(item => item.status === 'pending' || !item.status).toArray();
+    for (const item of items) {
       await db.queue.update(item.id, { status: 'sending' });
-
-      await fetch(GAS_URL, {
-        method: "POST",
-        mode: "no-cors", 
-        body: JSON.stringify(item.payload),
-      });
-
-      await db.queue.delete(item.id);
-      console.log("送信成功:", item.id);
-
-      // ★重要：スマホのために1秒待機（ネットワークの詰まりを防ぐ）
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-    } catch (e) {
-      await db.queue.update(item.id, { status: 'pending' });
-      console.error("送信失敗:", e);
-      break; // エラー時は一旦ループを抜けて10秒後の再試行に回す
+      try {
+        await fetch(GAS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(item.payload)
+        });
+        await db.queue.delete(item.id);
+        
+        // ★重要: GAS側の処理時間を考慮し、2秒待機してから次の画像へ
+        await new Promise(r => setTimeout(r, 2000)); 
+      } catch (e) {
+        await db.queue.update(item.id, { status: 'pending' });
+      }
     }
+  } finally {
+    self.isProcessing = false;
   }
 }
