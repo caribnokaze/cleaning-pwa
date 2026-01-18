@@ -23,22 +23,17 @@ window.addEventListener('DOMContentLoaded', () => {
 async function send() {
   const btn = document.querySelector("button");
   let isSuccess = false;
-
-  // ★1. 画面全体をロックするレイヤーを作成・表示
+  
+  // 画面ロック
   const lockLayer = document.createElement("div");
   lockLayer.id = "screen-lock";
-  lockLayer.style.position = "fixed";
-  lockLayer.style.top = "0";
-  lockLayer.style.left = "0";
-  lockLayer.style.width = "100%";
-  lockLayer.style.height = "100%";
-  lockLayer.style.background = "rgba(0,0,0,0.1)"; // ほんのりグレー
-  lockLayer.style.zIndex = "9999"; // 一番手前に
-  lockLayer.style.cursor = "not-allowed";
+  Object.assign(lockLayer.style, {
+    position: "fixed", top: "0", left: "0", width: "100%", height: "100%",
+    background: "rgba(0,0,0,0.2)", zIndex: "9999", cursor: "wait"
+  });
   document.body.appendChild(lockLayer);
 
   try {
-    // --- (バリデーションと変数取得は変更なし) ---
     const staff = document.getElementById("staff").value;
     const site = document.getElementById("site").value;
     const reportDate = document.getElementById("reportDate").value;
@@ -50,91 +45,65 @@ async function send() {
 
     if (!site || !staff || !reportDate || !workType || !files.length) {
       alert("必須項目をすべて入力してください");
-      // ★バリデーション失敗時はロックを解除
       document.body.removeChild(lockLayer);
       return;
     }
 
-    const workTypeLabels = {
-      "normal": "通常清掃のみ",
-      "full": "定期清掃＋フィルター清掃",
-      "regular": "定期清掃のみ",
-      "filter": "フィルター清掃のみ"
-    };
+    btn.disabled = true;
+    btn.innerText = "画像処理中...";
+
+    // --- A. 画像の圧縮（1枚ずつ確実に実行） ---
+    const allImages = [];
+    const workTypeLabels = { "normal": "通常清掃のみ", "full": "定期清掃＋フィルター清掃", "regular": "定期清掃のみ", "filter": "フィルター清掃のみ" };
     const workTypeLabel = workTypeLabels[workType] || "その他";
 
-    // 保存開始
-    btn.disabled = true;
-    btn.innerText = "データを保存中...";
-
-    // --- (圧縮と保存の処理は変更なし) ---
-    const compressionPromises = [];
+    // 通常写真
     for (let i = 0; i < files.length; i++) {
-      compressionPromises.push(compressToBase64(files[i], 800, 0.3).then(data => ({
-        name: `${site}_(${reportDate})_${staff}_${i + 1}`,
-        data: data,
-        isExtra: false
-      })));
+      const data = await compressToBase64(files[i], 800, 0.3);
+      allImages.push({ payload: { staff, site, reportDate, workTypeLabel, workTime, singleImage: { name: `通常_${i+1}`, data } } });
     }
+    // 追加写真
     for (let i = 0; i < extraFiles.length; i++) {
-      compressionPromises.push(compressToBase64(extraFiles[i], 800, 0.3).then(data => ({
-        name: `${site}_(${reportDate})_${staff}_${workTypeLabel}_${i + 1}`,
-        data: data,
-        isExtra: true
-      })));
+      const data = await compressToBase64(extraFiles[i], 800, 0.3);
+      allImages.push({ payload: { staff, site, reportDate, workTypeLabel, workTime, singleImage: { name: `追加_${i+1}`, data } } });
     }
 
-    const allImages = await Promise.all(compressionPromises);
-    const total = allImages.length;
-    for (let i = 0; i < total; i++) {      
-      await db.queue.add({
-        payload: { staff, site, reportDate, workTypeLabel, workTime, singleImage: allImages[i] },
-        status: 'pending'
-      });
+    // --- B. IndexedDBへの保存 ---
+    btn.innerText = "DB保存中...";
+    for (const item of allImages) {
+      await db.queue.add({ ...item, status: 'pending' });
     }
 
-    if (navigator.serviceWorker.controller) {
+    // --- C. 送信開始の合図 ---
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage('START_UPLOAD');
     }
 
-    isSuccess = true; 
-
-    // 表示の更新
-    btn.innerText = "送信完了";
-    btn.style.background = "#28a745";
-    btn.style.color = "#ffffff";
+    isSuccess = true;
     
+    // UI更新
     const msg = document.createElement("p");
-    msg.id = "success-msg";
-    msg.innerHTML = `<strong>お疲れ様でした！</strong><br>${total}枚の画像を送信しました。`;
+    msg.innerHTML = `<strong>${allImages.length}枚の送信予約完了！</strong><br>このまま10秒ほどお待ちください。`;
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
-    msg.style.marginTop = "10px";
     btn.parentNode.insertBefore(msg, btn);
+    
+    btn.innerText = "送信完了";
+    btn.style.background = "#28a745";
 
-    // ★リロードまでロックを維持
+    // Chrome対策：リロードを少し遅らせて通信を確実に開始させる
     setTimeout(() => {
       location.reload();
-    }, 5000);
+    }, 10000);
 
   } catch (e) {
     console.error(e);
-    alert("保存中にエラーが発生しました: " + e.message);
-    // ★エラー時は操作できるようにロックを解除
-    if (document.getElementById("screen-lock")) {
-      document.body.removeChild(lockLayer);
-    }
+    alert("エラー: " + e.message);
+    if (document.getElementById("screen-lock")) document.body.removeChild(lockLayer);
     btn.disabled = false;
     btn.innerText = "送信";
-  } finally {
-    if (!isSuccess) {
-      // 成功時以外はボタンを戻す
-      btn.disabled = false;
-      btn.innerText = "送信";
-    }
   }
 }
-
 /**
  * 3. 画像圧縮関数
  */
