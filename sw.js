@@ -51,14 +51,12 @@ async function processQueue() {
       // Chromeで確実にリダイレクトを許可させるためにフォームデータ形式にするか、
       // プレーンテキストとして明示的に送ります。
       await fetch(GAS_URL, {
-        method: "POST",
-        mode: "no-cors", // GASには必須
-        headers: {
-    // 重要なポイント: application/json ではなく text/plain を指定する
-    // これにより、ChromeのCORSプリフライト（事前チェック）をスキップし、
-    // かつリダイレクトを安全に通過させることができます。
-        "Content-Type": "text/plain"
-       },
+  method: "POST",
+  mode: "no-cors", 
+  // headers は指定しない（no-corsのデフォルトに従う）
+  body: JSON.stringify(item.payload),
+  keepalive: true 
+});
   body: JSON.stringify(item.payload),
   keepalive: true // ページがリロードされても通信を継続させる
       });
