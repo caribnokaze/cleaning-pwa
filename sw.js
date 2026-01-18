@@ -50,10 +50,7 @@ async function processQueue() {
       await fetch(GAS_URL, {
         method: "POST",
         mode: "no-cors", 
-        cache: "no-cache",
-        redirect: "follow", 
         body: JSON.stringify(item.payload),
-        keepalive: true // スマホではこれが生命線
       });
 
       await db.queue.delete(item.id);
