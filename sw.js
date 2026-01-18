@@ -5,7 +5,7 @@ importScripts('https://unpkg.com/dexie/dist/dexie.js');
 const db = new Dexie("PhotoUploadDB");
 db.version(1).stores({ queue: '++id, status' });
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzgrnfEbb6UNqg8KSLFEQgyoIhfD8ZGxb_Yx2CJu8sma9jt-FyF8W2iEXKHqziKBYIdow/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzNfouxEfDaWcoljv1hJBI6DtGbQpKrZDKyljznOvM_ZeZ27i2yhR3Wk3l8zi09vgKbug/exec";
 
 // 3. Service Workerの強制更新・有効化設定
 self.addEventListener('install', (event) => {
