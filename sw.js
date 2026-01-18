@@ -47,23 +47,25 @@ async function processQueue() {
     try {
       await db.queue.update(item.id, { status: 'sending' });
 
-      // Chrome対策：Blobを使わず、JSON文字列のまま送る。
-      // かわりに、redirectオプションを明示的に指定します。
       await fetch(GAS_URL, {
         method: "POST",
         mode: "no-cors", 
         cache: "no-cache",
-        // 'follow'がデフォルトですが、明示することでService Worker内での
-        // リダイレクト処理を安定させます（Chromeでの Failed to fetch 対策）
         redirect: "follow", 
-        body: JSON.stringify(item.payload)
+        body: JSON.stringify(item.payload),
+        keepalive: true // スマホではこれが生命線
       });
 
       await db.queue.delete(item.id);
-      console.log("GASへの送信に成功しました ID:", item.id);
+      console.log("送信成功:", item.id);
+
+      // ★重要：スマホのために1秒待機（ネットワークの詰まりを防ぐ）
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
     } catch (e) {
       await db.queue.update(item.id, { status: 'pending' });
-      console.error("送信エラー (Fetch失敗):", e);
+      console.error("送信失敗:", e);
+      break; // エラー時は一旦ループを抜けて10秒後の再試行に回す
     }
   }
 }
