@@ -55,9 +55,6 @@ async function processQueue() {
         mode: "no-cors",
         body: JSON.stringify(item.payload)
       });
-  body: JSON.stringify(item.payload),
-  keepalive: true // ページがリロードされても通信を継続させる
-      });
 
       await db.queue.delete(item.id);
       console.log("GASへの送信に成功しました ID:", item.id);
