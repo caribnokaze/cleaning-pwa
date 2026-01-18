@@ -98,6 +98,7 @@ async function send() {
 
     if (navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage('START_UPLOAD');
+      console.log("Message Sent");
     }
 
     isSuccess = true; 
