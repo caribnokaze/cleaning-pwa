@@ -47,15 +47,15 @@ async function processQueue() {
     try {
       await db.queue.update(item.id, { status: 'sending' });
 
-      // データをBlob形式に変換（これがSafariとChromeの両方で最も安定します）
-      const blob = new Blob([JSON.stringify(item.payload)], { type: 'text/plain' });
+      // データをBlob形式（text/plain）で包む
+      // これにより、Safariの制限を回避しつつ、Chromeのリダイレクト耐性を高めます
+      const payloadBlob = new Blob([JSON.stringify(item.payload)], { type: 'text/plain' });
 
       await fetch(GAS_URL, {
         method: "POST",
         mode: "no-cors",
-        body: blob,
-        // keepalive: true はChromeで「リロードによる中断」を防ぐために必須
-        keepalive: true 
+        body: payloadBlob, // 直接文字列ではなくBlobを渡す
+        keepalive: true    // Chromeでの「リロードによる切断」を防ぐ重要フラグ
       });
 
       await db.queue.delete(item.id);
