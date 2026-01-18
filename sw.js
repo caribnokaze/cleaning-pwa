@@ -50,13 +50,11 @@ async function processQueue() {
       // JSON文字列として送るのではなく、
       // Chromeで確実にリダイレクトを許可させるためにフォームデータ形式にするか、
       // プレーンテキストとして明示的に送ります。
-      await fetch(GAS_URL, {
-  method: "POST",
-  mode: "no-cors", 
-  // headers は指定しない（no-corsのデフォルトに従う）
-  body: JSON.stringify(item.payload),
-  keepalive: true 
-});
+     await fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(item.payload)
+      });
   body: JSON.stringify(item.payload),
   keepalive: true // ページがリロードされても通信を継続させる
       });
