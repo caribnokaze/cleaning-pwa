@@ -113,9 +113,17 @@ async function send() {
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
     msg.style.marginTop = "10px";
-    btn.parentNode.appendChild(msg);
+    msg.style.marginBottom = "10px"; // ボタンとの間に少し隙間を作る
 
-    // ★リロードまでロックを維持
+    // ★重要：ボタンの「親要素」に対して、ボタンの「前（上）」に挿入する
+    btn.parentNode.insertBefore(msg, btn);
+
+    // ボタンの見た目を更新
+    btn.innerText = "送信完了";
+    btn.style.background = "#28a745";
+    btn.style.color = "#ffffff";
+
+    // 3秒後にリロード
     setTimeout(() => {
       location.reload();
     }, 3000);
