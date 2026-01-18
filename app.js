@@ -134,7 +134,7 @@ for (let i = 0; i < allFiles.length; i++) {
     
     const msg = document.createElement("p");
     msg.id = "success-msg";
-    msg.innerHTML = `<strong>お疲れ様でした！</strong><br>10秒後に画面を戻します。`;
+    msg.innerHTML = `<strong>お疲れ様でした！</strong><br>3秒後に画面を戻します。`;
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
     msg.style.marginTop = "10px";
@@ -151,7 +151,7 @@ for (let i = 0; i < allFiles.length; i++) {
     // 3秒後にリロード
     setTimeout(() => {
       location.reload();
-    }, 10000);
+    }, 3000);
 
   } catch (e) {
     console.error(e);
