@@ -43,8 +43,17 @@ async function processQueue() {
   self.isProcessing = true;
 
   try {
-    const items = await db.queue.filter(item => item.status === 'pending' || !item.status).toArray();
-    if (items.length === 0) return;
+    const items = await db.queue
+  .filter(item =>
+    item.status === 'pending' ||
+    item.status === 'sending' ||
+    !item.status
+  )
+  .toArray();
+
+if (items.length === 0) return;
+
+const MAX_PER_RUN = 3;
 
     for (const item of items) {
       await db.queue.update(item.id, { status: 'sending' });
