@@ -36,9 +36,7 @@ setInterval(() => {
   processQueue();
 }, 10000);
 
-// 6. 送信処理の本体
 async function processQueue() {
-  // pending（未送信）のもの、またはstatusが未設定のものを取得
   const items = await db.queue
     .filter(item => item.status === 'pending' || !item.status)
     .toArray();
@@ -47,21 +45,24 @@ async function processQueue() {
 
   for (const item of items) {
     try {
-      // 送信中ステータスに変更
       await db.queue.update(item.id, { status: 'sending' });
 
-      // Google Apps Scriptへ送信
+      // JSON文字列として送るのではなく、
+      // Chromeで確実にリダイレクトを許可させるためにフォームデータ形式にするか、
+      // プレーンテキストとして明示的に送ります。
       await fetch(GAS_URL, {
         method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify(item.payload)
+        mode: "no-cors", // GASへのPOSTはこれが基本
+        headers: {
+          "Content-Type": "text/plain" // これを指定するとCORSのプリフライトを回避できる
+        },
+        body: JSON.stringify(item.payload),
+        keepalive: true // 画面リロード対策
       });
 
-      // 送信成功したら削除
       await db.queue.delete(item.id);
       console.log("GASへの送信に成功しました ID:", item.id);
     } catch (e) {
-      // 失敗したら pending に戻して次回リトライ
       await db.queue.update(item.id, { status: 'pending' });
       console.error("送信エラー:", e);
     }
