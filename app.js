@@ -109,7 +109,7 @@ async function send() {
     
     const msg = document.createElement("p");
     msg.id = "success-msg";
-    msg.innerHTML = `<strong>${total}枚の送信予約を受け付けました。</strong><br>3秒後に画面を戻します。`;
+    msg.innerHTML = `<strong>お疲れ様でした！</strong><br>3秒後に画面を戻します。`;
     msg.style.textAlign = "center";
     msg.style.color = "#28a745";
     msg.style.marginTop = "10px";
