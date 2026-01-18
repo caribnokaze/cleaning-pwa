@@ -52,12 +52,15 @@ async function processQueue() {
       // プレーンテキストとして明示的に送ります。
       await fetch(GAS_URL, {
         method: "POST",
-        mode: "no-cors", // GASへのPOSTはこれが基本
+        mode: "no-cors", // GASには必須
         headers: {
-          "Content-Type": "text/plain" // これを指定するとCORSのプリフライトを回避できる
-        },
-        body: JSON.stringify(item.payload),
-        keepalive: true // 画面リロード対策
+    // 重要なポイント: application/json ではなく text/plain を指定する
+    // これにより、ChromeのCORSプリフライト（事前チェック）をスキップし、
+    // かつリダイレクトを安全に通過させることができます。
+        "Content-Type": "text/plain"
+       },
+  body: JSON.stringify(item.payload),
+  keepalive: true // ページがリロードされても通信を継続させる
       });
 
       await db.queue.delete(item.id);
