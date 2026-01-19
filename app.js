@@ -99,7 +99,6 @@ async function send() {
       await fetch("https://script.google.com/macros/s/AKfycbzNfouxEfDaWcoljv1hJBI6DtGbQpKrZDKyljznOvM_ZeZ27i2yhR3Wk3l8zi09vgKbug/exec", {
         method: "POST",
         mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           staff,
           site,
